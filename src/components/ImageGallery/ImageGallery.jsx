@@ -7,45 +7,57 @@ import Modal from '../Modal/Modal';
 import { fetchPictures } from '../../services/fetch';
 import style from './ImageGallery.module.scss';
 
-const ImageGallery = (query) => {
+const ImageGallery = ({query}) => {
     const [images, setImages] = useState([]);
     const [page, setPage] = useState(1);
     const [status, setStatus] = useState('idle');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalImg, setModalImg] = useState('');
     const [modalAlt, setModalAlt] = useState('');
+    const [prevQuery, setPrevQuery] = useState('idle');
 
     useEffect(() => {
         setStatus('idle');
     }, []);
 
     useEffect(() => {
-        try {
-            if (page !== 1) {
+        if (page !== 1 && prevQuery === query) {
+            try {
                 fetchPictures(query, page).then(response => {
                     setImages(prevImages => [...prevImages, ...response.hits]);
                     setStatus('resolved');
+                    if (response.hits.length < 12) {
+                        setStatus('idle');
+                    };
                 });
-            } else if (query) {
+            } catch (error) {
+                console.error(error);
+            };
+        }
+    }, [query, page, prevQuery]);
+
+    useEffect(() => {
+        if (query && prevQuery !== query) {
+            try {
                 fetchPictures(query, 1).then(response => {
                     if (!response.hits.length || response.hits.length === 0) {
                         setImages(response.hits);
                         setStatus('rejected');
-                    }
-                    if (response.hits.length > 0) {
+                    } else {
                         setImages(response.hits);
                         setStatus('resolved');
                         setPage(1);
-                    }
-                    if (response.totalHits === response.hits.length) {
+                    };
+                    if (response.totalHits === response.hits.length && response.hits.length !== 0) {
                         setStatus('idle');
-                    }
+                    };
                 });
-            };
-        } catch (error) {
-            console.error(error);
+                setPrevQuery(query);
+            } catch (error) {
+                console.error(error);
+            }
         }
-    }, [query, page]);
+    }, [query, prevQuery]);
 
     const showModal = event => {
         setIsModalOpen(true);

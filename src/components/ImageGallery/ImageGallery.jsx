@@ -38,6 +38,7 @@ const ImageGallery = ({query}) => {
 
     useEffect(() => {
         if (query && prevQuery !== query) {
+            setPage(1);
             try {
                 fetchPictures(query, 1).then(response => {
                     if (!response.hits.length || response.hits.length === 0) {
@@ -46,7 +47,6 @@ const ImageGallery = ({query}) => {
                     } else {
                         setImages(response.hits);
                         setStatus('resolved');
-                        setPage(1);
                     };
                     if (response.totalHits === response.hits.length && response.hits.length !== 0) {
                         setStatus('idle');
